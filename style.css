@@ -1,0 +1,10 @@
+body {
+  margin: 0;
+    color: white;
+    background-color: rgb(24, 24, 24);
+    font-family: sans-serif;
+}
+canvas {
+    display: block;
+    background-color: aqua;
+}
