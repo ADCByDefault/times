@@ -5,37 +5,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Time</title>
         <link rel="stylesheet" href="style.css" />
-        <!-- <script src="main.js" type="module"></script> -->
+        <script src="main.js" type="module"></script>
     </head>
     <body>
-        <!-- <canvas id="canvas"></canvas> -->
+        <canvas id="canvas"></canvas>
     </body>
-    <script type="module">
-        import SunCalc from "suncalc";
-
-        // Helper function: Convert azimuth and altitude (elevation) to Cartesian coordinates
-        function azimuthAltitudeToCartesian(azimuth, altitude, distance = 1) {
-            const x = distance * Math.cos(altitudeRad) * Math.sin(azimuthRad);
-            const y = distance * Math.cos(altitudeRad) * Math.cos(azimuthRad);
-            const z = distance * Math.sin(altitudeRad);
-
-            return new THREE.Vector3(x, y, z);
-        }
-
-        // function degToRad(deg) {
-        //     return (deg * Math.PI) / 180;
-        // }
-        // function radToDeg(rad) {
-        //     return (rad * 180) / Math.PI;
-        // }
-
-        const lat = 36,
-            long = -89;
-        console.log(SunCalc);
-        const date = new Date(2024, 3, 8, 19, 18);
-        console.log(date);
-        const pos = SunCalc.getPosition(date, 40, -97);
-        const mpos = SunCalc.getMoonPosition(date, 40, -97);
-        console.log(pos, mpos);
-    </script>
 </html>
