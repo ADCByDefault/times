@@ -30,12 +30,12 @@ camera.position.set(10, 3, 5);
 controls.update();
 
 // Global Illumination
-const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
 directionalLight.castShadow = true;
 directionalLight.shadow.bias = -0.003;
 directionalLight.shadow.mapSize.width = 8192;
 directionalLight.shadow.mapSize.height = 8192;
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.01);
+const ambientLight = new THREE.AmbientLight(0xffffff, 1);
 scene.add(directionalLight, ambientLight);
 
 // Grid for debug
@@ -46,41 +46,48 @@ scene.add(gridHelper);
 const [earth, sun, moon, userPosition] = await Promise.all([
     Utils.loadModel("./models/Earth.glb", 1 / 500),
     Utils.loadModel("./models/Sun.glb", 1 / 500),
-    Utils.loadModel("./models/Moon.glb", 1 / 1000),
+    Utils.loadModel("./models/Moon.glb", 1 / 10000),
     Utils.getCurrentPosition(),
 ]);
 earth.rotateY(Utils.degToRad(-90));
 scene.add(earth, moon, sun);
 
+console.log(userPosition);
+const lat = userPosition.latitude;
+const long = userPosition.longitude;
+const geometry = new THREE.SphereGeometry(0.1,64,64);
+const material = new THREE.MeshBasicMaterial();
+const sphere = new THREE.Mesh(geometry,material);
+const ps = Utils.geographicToCartesian(lat,long);
+sphere.position.copy(ps);
+scene.add(sphere)
+
 // Animation
 let animationRequest = null;
+const date = new Date();
+const latitude = 0;
+const longitude = 0;
+
 animate();
 function animate() {
-    animationRequest = requestAnimationFrame(animate);
-    const latitude = 0;
-    const longitude = 0;
-    // const date = new Date(2024, 3, 8, 20, 20);
-    const date = new Date();
+    const spos = SunCalc.getPosition(date, latitude, longitude);
+    const mpos = SunCalc.getMoonPosition(date, latitude, longitude);
+    spos.azimuth += Utils.degToRad(180);
+    mpos.azimuth += Utils.degToRad(180);
+    date.setSeconds(date.getSeconds() + 20);
+    //rotated sun coordinates
+    const rsc = Utils.horizontalToCartesian(spos.azimuth, spos.altitude, 800);
+    const alignedSunCoordinates = new THREE.Vector3(rsc.y, rsc.x, -rsc.z);
+    //rotated moon coordinates
+    const rmc = Utils.horizontalToCartesian(mpos.azimuth, mpos.altitude, 50);
+    const alignedMoonCoordinates = new THREE.Vector3(rmc.y, rmc.x, -rmc.z);
+    setSun(alignedSunCoordinates);
+    setMoon(alignedMoonCoordinates);
 
-    let spos = SunCalc.getPosition(date, latitude, longitude);
-    let mpos = SunCalc.getMoonPosition(date, latitude, longitude);
-
-    let sunPosition = Utils.horizontalToCartesian(
-        spos.azimuth,
-        spos.altitude,
-        800
-    );
-    let moonPosition = Utils.horizontalToCartesian(
-        mpos.azimuth,
-        mpos.altitude,
-        20
-    );
-    console.log(spos)
-    setSun(sunPosition);
-    setMoon(moonPosition);
-
+    //
     controls.update();
     renderer.render(scene, camera);
+    animationRequest = requestAnimationFrame(animate);
 }
 
 /**
@@ -89,6 +96,7 @@ function animate() {
  */
 function setMoon(position) {
     moon.position.copy(position);
+    // moon.position.set(1, 0, 0);
     moon.lookAt(0, 0, 0);
     moon.rotateY(Utils.degToRad(90));
 }

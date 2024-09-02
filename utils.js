@@ -88,10 +88,9 @@ export async function loadModel(path, scale = 1) {
  * @returns {THREE.Vector3}
  */
 export function horizontalToCartesian(azimuth, altitude, distance = 1) {
-    const x = distance * Math.sin(altitude) * Math.cos(azimuth);
-    const y = distance * Math.sin(altitude) * Math.sin(azimuth);
-    const z = distance * Math.cos(altitude);
-
+    const x = distance * Math.cos(altitude) * Math.cos(azimuth);
+    const y = distance * Math.sin(altitude);
+    const z = distance * Math.cos(altitude) * Math.sin(azimuth);
     return new THREE.Vector3(x, y, z);
 }
 
@@ -103,8 +102,10 @@ export function horizontalToCartesian(azimuth, altitude, distance = 1) {
  * @returns {THREE.Vector3}
  */
 export function geographicToCartesian(latitude, longitude, distance = 1) {
-    const x = Math.cos(latitude) * Math.cos(longitude);
-    const y = Math.sin(latitude);
-    const z = -Math.cos(latitude) * Math.sin(longitude);
+    latitude = degToRad(latitude);
+    longitude = degToRad(latitude);
+    const x = distance * Math.cos(latitude) * Math.cos(longitude);
+    const y = distance * Math.sin(latitude);
+    const z = distance * Math.cos(latitude) * Math.sin(longitude);
     return new THREE.Vector3(x, y, z);
 }
