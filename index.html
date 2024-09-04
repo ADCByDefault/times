@@ -5,9 +5,147 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Time</title>
         <link rel="stylesheet" href="style.css" />
-        <script src="main.js" type="module"></script>
+        <script src="main.js" type="module" defer></script>
+        <style>
+            :root {
+                --LOADERLIBTEXTCOLOR: white;
+                --LOADERLIBBGCOLOR: black;
+                --LOADERLIBFADETIME: 500ms;
+                --LOADERLIBANIMATIONCHTIME: 700ms;
+            }
+            #LOADERLIBBG {
+                font-family: sans-serif;
+                font-weight: bold;
+                font-size: xx-large;
+                background-color: var(--LOADERLIBBGCOLOR);
+                color: var(--LOADERLIBTEXTCOLOR);
+                position: absolute;
+                inset: 0;
+                display: grid;
+                place-content: center;
+            }
+            #LOADERLIBBG.LOADERLIBFADEIN {
+                animation: LOADERLIBFADEIN forwards var(--LOADERLIBFADETIME);
+            }
+            #LOADERLIBBG.LOADERLIBFADEAWAY {
+                animation: LOADERLIBFADEAWAY forwards var(--LOADERLIBFADETIME);
+            }
+
+            .LOADERLIBANIMATIONCH {
+                transition: var(--LOADERLIBANIMATIONCHTIME) ease-in-out;
+            }
+            .LOADERLIBANIMATIONCH.hidden {
+                color: transparent;
+                cursor: default;
+                user-select: none;
+            }
+
+            @keyframes LOADERLIBFADEIN {
+                from {
+                    background-color: transparent;
+                    color: transparent;
+                }
+                to {
+                    background-color: var(--LOADERLIBBGCOLOR);
+                    color: var(--LOADERLIBTEXTCOLOR);
+                }
+            }
+            @keyframes LOADERLIBFADEAWAY {
+                from {
+                    background-color: var(--LOADERLIBBGCOLOR);
+                    color: var(--LOADERLIBTEXTCOLOR);
+                }
+                to {
+                    background-color: transparent;
+                    color: transparent;
+                }
+            }
+
+            #canvas {
+                display: none;
+            }
+        </style>
     </head>
     <body>
         <canvas id="canvas"></canvas>
     </body>
+    <script>
+        const LOADERLIBBG = document.createElement("div");
+        let LOADERLIBTIMER = null;
+        LOADERLIBBG.id = `LOADERLIBBG`;
+        LOADERLIBBG.appendChild(loadingDotDotDot());
+        document.body.appendChild(LOADERLIBBG);
+        LOADERLIBBG.classList.add("LOADERLIBFADEIN");
+
+        window.LOADERLIBLOADED = (onFadeEndCallBack, duration) => {
+            if (typeof duration === "number") {
+                LOADERLIBBG.style.setProperty(
+                    "--LOADERLIBFADETIME",
+                    `${duration}ms`
+                );
+            }
+            LOADERLIBBG.classList.remove("LOADERLIBFADEIN");
+            LOADERLIBBG.classList.add("LOADERLIBFADEAWAY");
+            window.addEventListener("animationend", () => {
+                if (typeof onFadeEndCallBack === "function") {
+                    onFadeEndCallBack();
+                }
+                document.body.removeChild(LOADERLIBBG);
+            });
+            if (LOADERLIBTIMER) {
+                clearInterval(LOADERLIBTIMER);
+            }
+        };
+
+        /** @returns {HTMLDivElement} */
+        function loadingDotDotDot() {
+            //options
+            const fixedString = "Loading";
+            const animatedString = "...";
+            const animationTime = 700;
+
+            //wrapper creation
+            const wrapper = document.createElement("div");
+            wrapper.classList.add("LOADERLIBWRAPPER");
+
+            const fixedSpan = document.createElement("span");
+            fixedSpan.classList.add("LOADERLIBFIXEDSPAN");
+            fixedSpan.innerText = fixedString;
+
+            const animatedSpan = document.createElement("span");
+            animatedSpan.classList.add("LOADERLIBANIMATEDSPAN");
+            animatedSpan.style.display = `inline-block`;
+            Array.from(animatedString).forEach((ch, index) => {
+                let chSpan = document.createElement("span");
+                chSpan.classList.add("LOADERLIBANIMATIONCH", "hidden");
+                chSpan.innerText = ch;
+                animatedSpan.appendChild(chSpan);
+            });
+            wrapper.append(fixedSpan, animatedSpan);
+
+            //setting up animation
+            let i = 0;
+            const nodes = Array.from(animatedSpan.children);
+            LOADERLIBTIMER = setInterval(() => {
+                try {
+                    if (nodes.length <= 0) throw Error("no animation to do");
+                    if (i == -1) {
+                        nodes.forEach((e) => {
+                            e.classList.add("hidden");
+                        });
+                        i++;
+                        return;
+                    }
+                    nodes[i].classList.remove("hidden");
+                    i++;
+                    if (nodes.length == i) i = -1;
+                } catch {
+                    console("error");
+                    clearInterval(LOADERLIBTIMER);
+                }
+            }, animationTime);
+
+            return wrapper;
+        }
+    </script>
 </html>

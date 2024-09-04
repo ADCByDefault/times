@@ -15,6 +15,7 @@ const renderer = new THREE.WebGLRenderer({
     canvas: document.getElementById("canvas"),
     antialias: true,
 });
+
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -51,24 +52,26 @@ const [earth, sun, moon, userPosition] = await Promise.all([
 ]);
 earth.rotateY(Utils.degToRad(-90));
 scene.add(earth, moon, sun);
+document.getElementById("canvas").style.display = "block";
 
-console.log(userPosition);
 const lat = userPosition.latitude;
 const long = userPosition.longitude;
-const geometry = new THREE.SphereGeometry(0.1,64,64);
+const geometry = new THREE.SphereGeometry(0.1, 64, 64);
 const material = new THREE.MeshBasicMaterial();
-const sphere = new THREE.Mesh(geometry,material);
-const ps = Utils.geographicToCartesian(lat,long);
+const sphere = new THREE.Mesh(geometry, material);
+const ps = Utils.geographicToCartesian(lat, long);
 sphere.position.copy(ps);
-scene.add(sphere)
+scene.add(sphere);
 
 // Animation
 let animationRequest = null;
 const date = new Date();
 const latitude = 0;
 const longitude = 0;
+window.LOADERLIBLOADED(() => {
+    animate();
+});
 
-animate();
 function animate() {
     const spos = SunCalc.getPosition(date, latitude, longitude);
     const mpos = SunCalc.getMoonPosition(date, latitude, longitude);
