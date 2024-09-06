@@ -86,6 +86,9 @@ export async function loadModel(path, scale = 1) {
  * @param {number} altitude
  * @param {number} distance
  * @returns {THREE.Vector3}
+ * since amizuth and altitude dipends on latitude and longitude
+ * the vector must be rotated and aligned the plane
+ * in order to get the correct result
  */
 export function horizontalToCartesian(azimuth, altitude, distance = 1) {
     const x = distance * Math.cos(altitude) * Math.cos(azimuth);
@@ -95,7 +98,9 @@ export function horizontalToCartesian(azimuth, altitude, distance = 1) {
 }
 
 /**
- * long = 0 , lat = 0, distance = 1 corrisponds to xyz (1, 0, 0)
+ * latitude = 0, longitude = 0, distance = 1 corrisponds to xyz {1, 0, 0}
+ * 43.77315840789258, 11.255955552360946, d = 1 corrisponds to {x: 0.708195104212102, y: 0.6918049719154453, z: -0.14094529152504512}
+ * the z is negated
  * @param {number} latitude
  * @param {number} longitude
  * @param {number} distance
@@ -103,9 +108,9 @@ export function horizontalToCartesian(azimuth, altitude, distance = 1) {
  */
 export function geographicToCartesian(latitude, longitude, distance = 1) {
     latitude = degToRad(latitude);
-    longitude = degToRad(latitude);
+    longitude = degToRad(longitude);
     const x = distance * Math.cos(latitude) * Math.cos(longitude);
     const y = distance * Math.sin(latitude);
-    const z = distance * Math.cos(latitude) * Math.sin(longitude);
+    const z = -distance * Math.cos(latitude) * Math.sin(longitude);
     return new THREE.Vector3(x, y, z);
 }

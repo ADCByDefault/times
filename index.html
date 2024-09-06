@@ -10,8 +10,8 @@
             :root {
                 --LOADERLIBTEXTCOLOR: white;
                 --LOADERLIBBGCOLOR: black;
-                --LOADERLIBFADETIME: 500ms;
-                --LOADERLIBANIMATIONCHTIME: 700ms;
+                --LOADERLIBFADETIME: 600ms ease-in-out;
+                --LOADERLIBANIMATIONCHTIME: 400ms ease-in-out;
             }
             #LOADERLIBBG {
                 font-family: sans-serif;
@@ -32,7 +32,7 @@
             }
 
             .LOADERLIBANIMATIONCH {
-                transition: var(--LOADERLIBANIMATIONCHTIME) ease-in-out;
+                transition: var(--LOADERLIBANIMATIONCHTIME);
             }
             .LOADERLIBANIMATIONCH.hidden {
                 color: transparent;
@@ -42,32 +42,28 @@
 
             @keyframes LOADERLIBFADEIN {
                 from {
-                    background-color: transparent;
-                    color: transparent;
+                    opacity: 0;
                 }
                 to {
-                    background-color: var(--LOADERLIBBGCOLOR);
-                    color: var(--LOADERLIBTEXTCOLOR);
+                    opacity: 1;
                 }
             }
             @keyframes LOADERLIBFADEAWAY {
                 from {
-                    background-color: var(--LOADERLIBBGCOLOR);
-                    color: var(--LOADERLIBTEXTCOLOR);
+                    opacity: 1;
                 }
                 to {
-                    background-color: transparent;
-                    color: transparent;
+                    opacity: 0;
                 }
             }
 
-            #canvas {
+            #canvas.d-none {
                 display: none;
             }
         </style>
     </head>
     <body>
-        <canvas id="canvas"></canvas>
+        <canvas id="canvas" class="d-none"></canvas>
     </body>
     <script>
         const LOADERLIBBG = document.createElement("div");
@@ -87,14 +83,14 @@
             LOADERLIBBG.classList.remove("LOADERLIBFADEIN");
             LOADERLIBBG.classList.add("LOADERLIBFADEAWAY");
             window.addEventListener("animationend", () => {
+                if (LOADERLIBTIMER) {
+                    clearInterval(LOADERLIBTIMER);
+                }
                 if (typeof onFadeEndCallBack === "function") {
                     onFadeEndCallBack();
                 }
-                document.body.removeChild(LOADERLIBBG);
+                LOADERLIBBG.remove();
             });
-            if (LOADERLIBTIMER) {
-                clearInterval(LOADERLIBTIMER);
-            }
         };
 
         /** @returns {HTMLDivElement} */

@@ -1,10 +1,25 @@
 body {
-  margin: 0;
+    margin: 0;
     color: white;
-    background-color: rgb(24, 24, 24);
+    background-color: rgb(0, 0, 0);
     font-family: sans-serif;
+    overflow: hidden;
+}
+canvas.d-none {
+    animation: none;
 }
 canvas {
+    --animation-time: 1s ease-in;
     display: block;
-    background-color: aqua;
+    background-color: black;
+    animation: system-canvas-fade-in forwards var(--animation-time);
+}
+
+@keyframes system-canvas-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }

@@ -4,6 +4,8 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import SunCalc from "suncalc";
 
 // Scene camera and renderer
+/** @type {HTMLCanvasElement}*/
+const canvas = document.getElementById("canvas");
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
     40,
@@ -11,86 +13,106 @@ const camera = new THREE.PerspectiveCamera(
     0.1,
     1000
 );
+
 const renderer = new THREE.WebGLRenderer({
-    canvas: document.getElementById("canvas"),
+    canvas: canvas,
     antialias: true,
 });
-
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 
+sizeCanvas();
+
 // Orbit controls
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.1;
-controls.enablePan = true;
+controls.dampingFactor = 0.04;
+controls.enablePan = false;
+controls.enableZoom = false;
 controls.enableRotate = true;
-controls.enableZoon = true;
-camera.position.set(10, 3, 5);
+camera.position.set(3, 0, 2);
 controls.update();
 
+// Canvas on window change
+window.addEventListener("resize", () => {
+    sizeCanvas();
+});
+
+function sizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
 // Global Illumination
-const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 4);
 directionalLight.castShadow = true;
 directionalLight.shadow.bias = -0.003;
 directionalLight.shadow.mapSize.width = 8192;
 directionalLight.shadow.mapSize.height = 8192;
-const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.01);
 scene.add(directionalLight, ambientLight);
 
 // Grid for debug
-const gridHelper = new THREE.GridHelper(200, 400, 0x888888, 0x444444);
-scene.add(gridHelper);
+// const gridHelper = new THREE.GridHelper(200, 400, 0x888888, 0x444444);
+// scene.add(gridHelper);
 
 // Meshes and user's position
 const [earth, sun, moon, userPosition] = await Promise.all([
     Utils.loadModel("./models/Earth.glb", 1 / 500),
     Utils.loadModel("./models/Sun.glb", 1 / 500),
-    Utils.loadModel("./models/Moon.glb", 1 / 10000),
+    Utils.loadModel("./models/Moon.glb", 1 / 3000),
     Utils.getCurrentPosition(),
 ]);
 earth.rotateY(Utils.degToRad(-90));
 scene.add(earth, moon, sun);
-document.getElementById("canvas").style.display = "block";
-
-const lat = userPosition.latitude;
-const long = userPosition.longitude;
-const geometry = new THREE.SphereGeometry(0.1, 64, 64);
-const material = new THREE.MeshBasicMaterial();
-const sphere = new THREE.Mesh(geometry, material);
-const ps = Utils.geographicToCartesian(lat, long);
-sphere.position.copy(ps);
-scene.add(sphere);
-
+//setting camera to lat = 0 long = closest to sun
+camera.position.copy(
+    Utils.geographicToCartesian(
+        0,
+        (360 / 24) *
+            (new Date().getUTCHours() + new Date().getUTCMinutes() / 60) -
+            180,
+        5
+    )
+);
 // Animation
 let animationRequest = null;
-const date = new Date();
-const latitude = 0;
-const longitude = 0;
 window.LOADERLIBLOADED(() => {
-    animate();
+    animationRequest = animate();
+    document.getElementById("canvas").classList.remove("d-none");
 });
-
 function animate() {
+    handleSunMoonPosition();
+
+    // updates
+    controls.update();
+    renderer.render(scene, camera);
+    animationRequest = requestAnimationFrame(animate);
+}
+
+function handleSunMoonPosition() {
+    const date = new Date();
+    let latitude = 0;
+    let longitude = 0;
+    // longitude = (360/24)*(date.getUTCHours()+date.getUTCMinutes()/60) - 180;
     const spos = SunCalc.getPosition(date, latitude, longitude);
     const mpos = SunCalc.getMoonPosition(date, latitude, longitude);
-    spos.azimuth += Utils.degToRad(180);
-    mpos.azimuth += Utils.degToRad(180);
-    date.setSeconds(date.getSeconds() + 20);
+    spos.azimuth += Math.PI;
+    mpos.azimuth += Math.PI;
     //rotated sun coordinates
     const rsc = Utils.horizontalToCartesian(spos.azimuth, spos.altitude, 800);
     const alignedSunCoordinates = new THREE.Vector3(rsc.y, rsc.x, -rsc.z);
     //rotated moon coordinates
     const rmc = Utils.horizontalToCartesian(mpos.azimuth, mpos.altitude, 50);
     const alignedMoonCoordinates = new THREE.Vector3(rmc.y, rmc.x, -rmc.z);
+
     setSun(alignedSunCoordinates);
     setMoon(alignedMoonCoordinates);
-
-    //
-    controls.update();
-    renderer.render(scene, camera);
-    animationRequest = requestAnimationFrame(animate);
+    return { sun: alignedSunCoordinates, moon: alignedMoonCoordinates };
 }
 
 /**
