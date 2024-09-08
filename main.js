@@ -2,6 +2,7 @@ import * as Utils from "./utils";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import SunCalc from "suncalc";
+import { TextGeometry } from "three/examples/jsm/Addons.js";
 
 // Scene camera and renderer
 /** @type {HTMLCanvasElement}*/
@@ -29,7 +30,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.04;
 controls.enablePan = false;
-controls.enableZoom = false;
+// controls.enableZoom = false;
 controls.enableRotate = true;
 camera.position.set(3, 0, 2);
 controls.update();
@@ -53,32 +54,26 @@ directionalLight.castShadow = true;
 directionalLight.shadow.bias = -0.003;
 directionalLight.shadow.mapSize.width = 8192;
 directionalLight.shadow.mapSize.height = 8192;
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.01);
+const ambientLight = new THREE.AmbientLight(0xffffff, 1);
 scene.add(directionalLight, ambientLight);
 
 // Grid for debug
 // const gridHelper = new THREE.GridHelper(200, 400, 0x888888, 0x444444);
 // scene.add(gridHelper);
 
-// Meshes and user's position
-const [earth, sun, moon, userPosition] = await Promise.all([
-    Utils.loadModel("./models/Earth.glb", 1 / 500),
-    Utils.loadModel("./models/Sun.glb", 1 / 500),
-    Utils.loadModel("./models/Moon.glb", 1 / 3000),
-    Utils.getCurrentPosition(),
+// Meshes and user's position and setup
+const [earth, sun, moon, customFont] = await Promise.all([
+    Utils.loadModel("./assets/Earth.glb", 1 / 500),
+    Utils.loadModel("./assets/Sun.glb", 1 / 500),
+    Utils.loadModel("./assets/Moon.glb", 1 / 3000),
+    Utils.loadFont("./assets/JetBrainsMono-MediumItalic.ttf"),
 ]);
-earth.rotateY(Utils.degToRad(-90));
-scene.add(earth, moon, sun);
-//setting camera to lat = 0 long = closest to sun
-camera.position.copy(
-    Utils.geographicToCartesian(
-        0,
-        (360 / 24) *
-            (new Date().getUTCHours() + new Date().getUTCMinutes() / 60) -
-            180,
-        5
-    )
-);
+const userPosition = Utils.getCurrentPosition();
+/** @type {THREE.Mesh} */
+let textMesh;
+let textString;
+setUp();
+
 // Animation
 let animationRequest = null;
 window.LOADERLIBLOADED(() => {
@@ -87,7 +82,7 @@ window.LOADERLIBLOADED(() => {
 });
 function animate() {
     handleSunMoonPosition();
-
+    setText();
     // updates
     controls.update();
     renderer.render(scene, camera);
@@ -114,7 +109,6 @@ function handleSunMoonPosition() {
     setMoon(alignedMoonCoordinates);
     return { sun: alignedSunCoordinates, moon: alignedMoonCoordinates };
 }
-
 /**
  *
  * @param {THREE.Vector3} position
@@ -125,7 +119,6 @@ function setMoon(position) {
     moon.lookAt(0, 0, 0);
     moon.rotateY(Utils.degToRad(90));
 }
-
 /**
  *
  * @param {THREE.Vector3} position
@@ -134,4 +127,69 @@ function setSun(position) {
     sun.position.copy(position);
     const lightPosition = position.multiplyScalar(0.5);
     directionalLight.position.copy(lightPosition);
+}
+
+function setText() {
+    const date = new Date();
+    const timeString = `${date.getDay()} / ${date.getHours()} / ${date.getMinutes()} / ${date.getSeconds()}`;
+    if (!textString) {
+        textString = timeString;
+        textMesh = makeTextMesh(customFont, timeString);
+        scene.add(textMesh);
+    }
+    const t = textMesh.clone();
+    if (textString !== timeString) {
+        textString = timeString;
+        scene.remove(textMesh);
+        textMesh = makeTextMesh(customFont, timeString);
+        scene.add(textMesh);
+        textMesh.quaternion.copy(t.quaternion);
+    }
+    t.lookAt(camera.position);
+    textMesh.quaternion.slerp(t.quaternion, 0.2);
+}
+function makeTextMesh(font, string) {
+    let geometry = new TextGeometry(string, {
+        depth: 0.02,
+        size: window.innerWidth / (1920 * 1.5),
+        font: font,
+    });
+    let material = new THREE.MeshNormalMaterial();
+    material.depthTest = false;
+    const textMesh = new THREE.Mesh(geometry, material);
+    geometry.computeBoundingBox();
+    if (geometry.boundingBox) {
+        let max = geometry.boundingBox.max;
+        geometry.translate(-max.x / 2, -max.y / 2, -max.z / 2);
+    }
+    return textMesh;
+}
+
+function setUp() {
+    //positions
+    earth.rotateY(Utils.degToRad(-90));
+    scene.add(earth, moon, sun);
+    let date = new Date();
+    let lat = 35;
+    let long = (360 / 24) * date.getUTCHours() - 180;
+    camera.position.copy(Utils.geographicToCartesian(lat, long, 5));
+    setText();
+}
+
+function numToMonth(num) {
+    const dic = {
+        0: ["January", "Jan", "01"],
+        1: ["Febuary", "Feb", "02"],
+        2: ["March", "March", "03"],
+        3: ["April", "April", "04"],
+        4: ["May", "May", "05"],
+        5: ["June", "June", "06"],
+        6: ["July", "July", "07"],
+        7: ["August", "Aug", "08"],
+        8: ["September", "Sep", "09"],
+        9: ["October", "Oct", "10"],
+        10: ["November", "Nov", "11"],
+        11: ["December", "Dec", "12"],
+    };
+    return dic[num];
 }

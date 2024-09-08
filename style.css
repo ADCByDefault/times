@@ -9,8 +9,9 @@ canvas.d-none {
     animation: none;
 }
 canvas {
-    --animation-time: 1s ease-in;
+    --animation-time: 1500ms ease-in;
     display: block;
+    position: absolute;
     background-color: black;
     animation: system-canvas-fade-in forwards var(--animation-time);
 }
