@@ -69,9 +69,15 @@ const [earth, sun, moon, customFont] = await Promise.all([
     Utils.loadFont("./assets/JetBrainsMono-MediumItalic.ttf"),
 ]);
 const userPosition = Utils.getCurrentPosition();
-/** @type {THREE.Mesh} */
-let textMesh;
-let textString;
+
+const textMeshes = [
+    new Utils.TextMesh("ciao", customFont, {}, { depthTest: false }),
+    new Utils.TextMesh("mamma", customFont, {}, { depthTest: false }),
+];
+textMeshes.forEach((text) => {
+    scene.add(text.mesh);
+});
+
 setUp();
 
 // Animation
@@ -131,38 +137,21 @@ function setSun(position) {
 
 function setText() {
     const date = new Date();
-    const timeString = `${date.getDay()} / ${date.getHours()} / ${date.getMinutes()} / ${date.getSeconds()}`;
-    if (!textString) {
-        textString = timeString;
-        textMesh = makeTextMesh(customFont, timeString);
-        scene.add(textMesh);
-    }
-    const t = textMesh.clone();
-    if (textString !== timeString) {
-        textString = timeString;
-        scene.remove(textMesh);
-        textMesh = makeTextMesh(customFont, timeString);
-        scene.add(textMesh);
-        textMesh.quaternion.copy(t.quaternion);
-    }
-    t.lookAt(camera.position);
-    textMesh.quaternion.slerp(t.quaternion, 0.2);
-}
-function makeTextMesh(font, string) {
-    let geometry = new TextGeometry(string, {
-        depth: 0.02,
-        size: window.innerWidth / (1920 * 1.5),
-        font: font,
+    const timeString = `${date.toString().split(" ")[4]}`;
+    const size = textMeshes.reduce((prev, curr) => {
+        prev.add(curr.boundingBox.max);
+        return prev;
+    }, new THREE.Vector3(0, 0, 0));
+    const halfSize = size.clone().multiplyScalar(1 / 2);
+    //
+    textMeshes.forEach((text) => {
+        if (timeString !== text.text) {
+            text.changeTextTo(timeString);
+        }
+        const t = text.mesh.clone(size);
+        t.lookAt(camera.position);
+        text.mesh.quaternion.slerp(t.quaternion, 0.1);
     });
-    let material = new THREE.MeshNormalMaterial();
-    material.depthTest = false;
-    const textMesh = new THREE.Mesh(geometry, material);
-    geometry.computeBoundingBox();
-    if (geometry.boundingBox) {
-        let max = geometry.boundingBox.max;
-        geometry.translate(-max.x / 2, -max.y / 2, -max.z / 2);
-    }
-    return textMesh;
 }
 
 function setUp() {
@@ -174,22 +163,4 @@ function setUp() {
     let long = (360 / 24) * date.getUTCHours() - 180;
     camera.position.copy(Utils.geographicToCartesian(lat, long, 5));
     setText();
-}
-
-function numToMonth(num) {
-    const dic = {
-        0: ["January", "Jan", "01"],
-        1: ["Febuary", "Feb", "02"],
-        2: ["March", "March", "03"],
-        3: ["April", "April", "04"],
-        4: ["May", "May", "05"],
-        5: ["June", "June", "06"],
-        6: ["July", "July", "07"],
-        7: ["August", "Aug", "08"],
-        8: ["September", "Sep", "09"],
-        9: ["October", "Oct", "10"],
-        10: ["November", "Nov", "11"],
-        11: ["December", "Dec", "12"],
-    };
-    return dic[num];
 }

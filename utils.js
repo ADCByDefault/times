@@ -108,6 +108,28 @@ export async function loadModel(path, scale = 1) {
         );
     });
 }
+/**
+ *
+ * @param {String} path
+ * @returns {Font}
+ */
+export async function loadFont(path) {
+    const ttfLoader = new TTFLoader();
+    const fontLoader = new FontLoader();
+    const font = await new Promise((resolve, reject) => {
+        ttfLoader.load(
+            path,
+            (json) => {
+                resolve(fontLoader.parse(json));
+            },
+            (progress) => {},
+            (error) => {
+                reject(error);
+            }
+        );
+    });
+    return font;
+}
 
 /**
  *
@@ -143,25 +165,82 @@ export function geographicToCartesian(latitude, longitude, distance = 1) {
     return new THREE.Vector3(x, y, z);
 }
 
-/**
- *
- * @param {String} path
- * @returns {Font}
- */
-export async function loadFont(path) {
-    const ttfLoader = new TTFLoader();
-    const fontLoader = new FontLoader();
-    const font = await new Promise((resolve, reject) => {
-        ttfLoader.load(
-            path,
-            (json) => {
-                resolve(fontLoader.parse(json));
-            },
-            (progress) => {},
-            (error) => {
-                reject(error);
-            }
+export class TextMesh {
+    /**
+     *
+     * @param {string} text
+     * @param {Font} font
+     * @param {import("three/examples/jsm/Addons.js").TextGeometryParameters} geometryOptions
+     * @param {THREE.MeshStandardMaterialParameters} materialOptions
+     */
+    constructor(text, font, geometryOptions = {}, materialOptions = {}) {
+        /** @type {string} */
+        this.text = text;
+        /** @type {Font} */
+        this.font = font;
+        /** @type {import("three/examples/jsm/Addons.js").TextGeometryParameters} */
+        this.geometryOptions = geometryOptions;
+        /** @type {THREE.MeshStandardMaterialParameters} */
+        this.materialOptions = materialOptions;
+        /** @type {THREE.Mesh<TextGeometry, THREE.MeshStandardMaterial, THREE.Object3DEventMap>} */
+        this.mesh = this.makeTextMesh(
+            font,
+            text,
+            geometryOptions,
+            materialOptions
         );
-    });
-    return font;
+        this.mesh.geometry.computeBoundingBox();
+        /** @type {THREE.Box3} */
+        this.boundingBox = this.mesh.geometry.boundingBox;
+        this.centerMesh();
+    }
+
+    /**
+     *
+     * @param {Font} font
+     * @param {string} string
+     * @param {import("three/examples/jsm/Addons.js").TextGeometryParameters} geometryOptions
+     * @param {THREE.MeshStandardMaterialParameters} materialOptions
+     * @returns {THREE.Mesh<TextGeometry, THREE.MeshStandardMaterial, THREE.Object3DEventMap>}
+     */
+    makeTextMesh(font, string, geometryOptions, materialOptions) {
+        let geometry = new TextGeometry(string, {
+            depth: geometryOptions.depth || 0.04,
+            size: geometryOptions.size || window.innerWidth / (1920 * 1.5),
+            font: font,
+            ...geometryOptions,
+        });
+        let material = new THREE.MeshNormalMaterial({
+            ...materialOptions,
+        });
+        const textMesh = new THREE.Mesh(geometry, material);
+        textMesh.position.set(0, 0, 0);
+        return textMesh;
+    }
+
+    /**
+     *
+     * @param {string} string
+     */
+    changeTextTo(string) {
+        this.text = string;
+        let font = this.font;
+        let geometryOptions = this.geometryOptions;
+        let geometry = new TextGeometry(string, {
+            depth: geometryOptions.depth || 0.04,
+            size: geometryOptions.size || window.innerWidth / (1920 * 1.5),
+            font: font,
+            ...geometryOptions,
+        });
+        this.mesh.geometry.dispose();
+        this.mesh.geometry = geometry;
+        geometry.computeBoundingBox();
+        this.boundingBox = geometry.boundingBox;
+        this.centerMesh();
+    }
+
+    centerMesh() {
+        const max = this.boundingBox.max;
+        this.mesh.geometry.translate(-max.x / 2, -max.y / 2, -max.z / 2);
+    }
 }
