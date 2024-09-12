@@ -206,7 +206,11 @@ export class TextMesh {
     makeTextMesh(font, string, geometryOptions, materialOptions) {
         let geometry = new TextGeometry(string, {
             depth: geometryOptions.depth || 0.04,
-            size: geometryOptions.size || window.innerWidth / (1920 * 1.5),
+            size:
+                geometryOptions.size ||
+                window.innerWidth /
+                    (window.innerHeight + window.innerWidth) /
+                    2,
             font: font,
             ...geometryOptions,
         });
@@ -222,13 +226,17 @@ export class TextMesh {
      *
      * @param {string} string
      */
-    changeTextTo(string) {
+    changeMeshTo(string) {
         this.text = string;
         let font = this.font;
         let geometryOptions = this.geometryOptions;
         let geometry = new TextGeometry(string, {
             depth: geometryOptions.depth || 0.04,
-            size: geometryOptions.size || window.innerWidth / (1920 * 1.5),
+            size:
+                geometryOptions.size ||
+                window.innerWidth /
+                    (window.innerHeight + window.innerWidth) /
+                    2,
             font: font,
             ...geometryOptions,
         });
@@ -243,4 +251,48 @@ export class TextMesh {
         const max = this.boundingBox.max;
         this.mesh.geometry.translate(-max.x / 2, -max.y / 2, -max.z / 2);
     }
+
+    /** @param {string} string*/
+    updateText(string) {
+        if (this.text !== string) {
+            this.changeMeshTo(string);
+        }
+    }
+}
+
+/**
+ *
+ * @param {THREE.Object3D} object
+ * @param {THREE.Vector3} position
+ * @param {number} slerpValue
+ * @returns {THREE.Object3D} clone of the object
+ */
+export function lookAt(object, position, slerpValue = 1) {
+    const t = object.clone();
+    t.lookAt(position);
+    object.quaternion.slerp(t.quaternion, slerpValue);
+    return t;
+}
+
+/**
+ *
+ * @param {THREE.Object3D} object
+ * @param {THREE.Vector3} position
+ * @param {number} lerpValue
+ */
+export function moveTo(object, position, lerpValue = 1) {
+    if (object.position.equals(position)) {
+        return;
+    }
+    object.position.lerp(position, lerpValue);
+}
+
+/**
+ *
+ * @param {THREE.Object3D} object
+ * @returns {THREE.Vector3}
+ */
+export function getNormalWorldDirection(object) {
+    const dir = object.getWorldDirection(new THREE.Vector3()).normalize();
+    return dir;
 }
