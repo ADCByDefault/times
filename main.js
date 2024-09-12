@@ -73,10 +73,23 @@ const userPosition = Utils.getCurrentPosition();
 const textMeshes = [
     new Utils.TextMesh("ciao", customFont, {}, { depthTest: false }),
     new Utils.TextMesh("mamma", customFont, {}, { depthTest: false }),
+    new Utils.TextMesh("mamma", customFont, {}, { depthTest: false }),
+    new Utils.TextMesh("mamma", customFont, {}, { depthTest: false }),
+    new Utils.TextMesh("mamma", customFont, {}, { depthTest: false }),
+    new Utils.TextMesh("mamma", customFont, {}, { depthTest: false }),
+    new Utils.TextMesh("mamma", customFont, {}, { depthTest: false }),
 ];
 textMeshes.forEach((text) => {
     scene.add(text.mesh);
 });
+const box = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.2, 0.07),
+    new THREE.MeshStandardMaterial({ color: 0xef77ef, depthTest: false })
+);
+box.rotateX(Utils.degToRad(-90));
+box.rotateY(Utils.degToRad(0));
+box.rotateZ(Utils.degToRad(0));
+scene.add(box);
 
 setUp();
 
@@ -138,19 +151,23 @@ function setSun(position) {
 function setText() {
     const date = new Date();
     const timeString = `${date.toString().split(" ")[4]}`;
-    const size = textMeshes.reduce((prev, curr) => {
-        prev.add(curr.boundingBox.max);
-        return prev;
-    }, new THREE.Vector3(0, 0, 0));
-    const halfSize = size.clone().multiplyScalar(1 / 2);
+    let ySize =
+        textMeshes.reduce((prev, curr) => curr.boundingBox.max.y + prev, 0) / 2;
     //
-    textMeshes.forEach((text) => {
+    const t = box.clone();
+    t.lookAt(camera.position);
+    box.quaternion.slerp(t.quaternion, 0.1);
+    t.rotateX(-Math.PI / 2);
+    const dir = t.getWorldDirection(new THREE.Vector3()).normalize();
+
+    textMeshes.forEach((text, index) => {
         if (timeString !== text.text) {
             text.changeTextTo(timeString);
         }
-        const t = text.mesh.clone(size);
-        t.lookAt(camera.position);
-        text.mesh.quaternion.slerp(t.quaternion, 0.1);
+        text.mesh.quaternion.copy(box.quaternion);
+        const tdir = new THREE.Vector3().copy(dir);
+        text.mesh.position.copy(tdir.multiplyScalar(ySize));
+        ySize -= text.boundingBox.max.y;
     });
 }
 
@@ -162,5 +179,6 @@ function setUp() {
     let lat = 35;
     let long = (360 / 24) * date.getUTCHours() - 180;
     camera.position.copy(Utils.geographicToCartesian(lat, long, 5));
+    camera.position.set(-4, 0, 0);
     setText();
 }
