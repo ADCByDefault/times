@@ -45,12 +45,12 @@ function sizeCanvas() {
 }
 
 // Global Illumination
-const directionalLight = new THREE.DirectionalLight(0xffffff, 4);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
 directionalLight.castShadow = true;
 directionalLight.shadow.bias = -0.003;
 directionalLight.shadow.mapSize.width = 8192;
 directionalLight.shadow.mapSize.height = 8192;
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.01);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.05);
 scene.add(directionalLight, ambientLight);
 
 // Meshes
@@ -61,31 +61,70 @@ const [earth, sun, moon, customFont] = await Promise.all([
     Utils.loadFont("./assets/FreeMono.ttf"),
 ]);
 
-//Texts
-const box = new THREE.Mesh(
-    new THREE.BoxGeometry(0.3, 0.2, 0.07),
-    new THREE.MeshStandardMaterial({ color: 0xef77ef, depthTest: false })
-);
+//Colors & Materials
+const colors = [
+    0x2f3c7e, 0xfee715, 0xf96167, 0x990011, 0xfcf6f5, 0x8aaae5, 0x00246b,
+    0xea738d, 0x2c5f2d, 0x1e2761, 0x408ec6, 0x7a2048, 0xb85042, 0xe7e8d1,
+    0xa7beae, 0xf98866, 0x735da5, 0xf98866, 0xc4dfe6, 0x20948b, 0x6ab187,
+    0x31473a, 0xedf4f2, 0xf52549, 0x1995ad,
+];
+const color = colors[getFlooredRandom(0, colors.length)];
+/** @type {THREE.Material} */
+const allMaterialsOptions = { depthTest: false };
+const materials = [
+    new THREE.MeshBasicMaterial({
+        ...allMaterialsOptions,
+        color: color,
+        wireframe: false,
+    }),
+    new THREE.MeshNormalMaterial({ ...allMaterialsOptions }),
+    new THREE.MeshPhysicalMaterial({
+        ...allMaterialsOptions,
+        emissive: color,
+        roughness: getRandom(0, 100) / 100,
+        metalness: getRandom(0, 100) / 100,
+        sheen: getRandom(0, 100) / 100,
+        sheenColor: colors[getFlooredRandom(0, colors.length)],
+    }),
+    new THREE.MeshToonMaterial({ ...allMaterialsOptions, color: color }),
+];
+const material = materials[getFlooredRandom(0, materials.length)];
+//TextOptions
 function fontSize() {
     return window.innerWidth / (window.innerHeight + window.innerWidth) / 2;
 }
 const dateMeshOptions = {
-    fontMultiplier: 0.5,
+    fontMultiplier: getRandom(.5, .7),
+    depth: getRandom(0.05, 0.1),
 };
 const timeMeshOptions = {
-    fontMultiplier: 1,
+    fontMultiplier: getRandom(dateMeshOptions.fontMultiplier, 1.4),
+    depth: dateMeshOptions.depth,
 };
+//Texts
+console.log(material, color);
+const box = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.2, 0.07),
+    new THREE.MeshStandardMaterial({ color: 0xef77ef, depthTest: false })
+);
+// const depth =
 const dateMesh = new Utils.TextMesh(
     "",
     customFont,
-    { size: fontSize() * dateMeshOptions.fontMultiplier },
-    { depthTest: false }
+    {
+        size: fontSize() * dateMeshOptions.fontMultiplier,
+        depth: dateMeshOptions.depth,
+    },
+    material
 );
 const timeMesh = new Utils.TextMesh(
     "",
     customFont,
-    { size: fontSize() * timeMeshOptions.fontMultiplier },
-    { depthTest: false }
+    {
+        size: fontSize() * timeMeshOptions.fontMultiplier,
+        depth: timeMeshOptions.depth,
+    },
+    material
 );
 const textMeshes = [dateMesh, timeMesh];
 textMeshes.forEach((text) => {
@@ -228,3 +267,10 @@ window.addEventListener("resize", () => {
     timeMesh.changeMeshTo(timeMesh.text);
     dateMesh.changeMeshTo(dateMesh.text);
 });
+
+function getRandom(min, max) {
+    return Math.random() * (max - min) + min;
+}
+function getFlooredRandom(min, max) {
+    return Math.floor(Math.random() * (max - min) + min);
+}

@@ -171,24 +171,19 @@ export class TextMesh {
      * @param {string} text
      * @param {Font} font
      * @param {import("three/examples/jsm/Addons.js").TextGeometryParameters} geometryOptions
-     * @param {THREE.MeshStandardMaterialParameters} materialOptions
+     * @param {THREE.Material} material
      */
-    constructor(text, font, geometryOptions = {}, materialOptions = {}) {
+    constructor(text, font, geometryOptions = {}, material = {}) {
         /** @type {string} */
         this.text = text;
         /** @type {Font} */
         this.font = font;
         /** @type {import("three/examples/jsm/Addons.js").TextGeometryParameters} */
         this.geometryOptions = geometryOptions;
-        /** @type {THREE.MeshStandardMaterialParameters} */
-        this.materialOptions = materialOptions;
+        /** @type {THREE.Material} */
+        this.material = material;
         /** @type {THREE.Mesh<TextGeometry, THREE.MeshStandardMaterial, THREE.Object3DEventMap>} */
-        this.mesh = this.makeTextMesh(
-            font,
-            text,
-            geometryOptions,
-            materialOptions
-        );
+        this.mesh = this.makeTextMesh(font, text, geometryOptions, material);
         this.mesh.geometry.computeBoundingBox();
         /** @type {THREE.Box3} */
         this.boundingBox = this.mesh.geometry.boundingBox;
@@ -200,25 +195,21 @@ export class TextMesh {
      * @param {Font} font
      * @param {string} string
      * @param {import("three/examples/jsm/Addons.js").TextGeometryParameters} geometryOptions
-     * @param {THREE.MeshStandardMaterialParameters} materialOptions
+     * @param {THREE.Material} material
      * @returns {THREE.Mesh<TextGeometry, THREE.MeshStandardMaterial, THREE.Object3DEventMap>}
      */
-    makeTextMesh(font, string, geometryOptions, materialOptions) {
+    makeTextMesh(font, string, geometryOptions, material) {
         let geometry = new TextGeometry(string, {
+            font: font,
             depth: geometryOptions.depth || 0.04,
             size:
                 geometryOptions.size ||
                 window.innerWidth /
                     (window.innerHeight + window.innerWidth) /
                     2,
-            font: font,
             ...geometryOptions,
         });
-        let material = new THREE.MeshNormalMaterial({
-            ...materialOptions,
-        });
         const textMesh = new THREE.Mesh(geometry, material);
-        textMesh.position.set(0, 0, 0);
         return textMesh;
     }
 
@@ -295,4 +286,23 @@ export function moveTo(object, position, lerpValue = 1) {
 export function getNormalWorldDirection(object) {
     const dir = object.getWorldDirection(new THREE.Vector3()).normalize();
     return dir;
+}
+
+/**
+ *
+ * @param {number} min
+ * @param {number} max
+ * @returns {number}
+ */
+export function getRandom(min, max) {
+    return Math.random() * (max - min) + min;
+}
+/**
+ *
+ * @param {number} min
+ * @param {number} max
+ * @returns {number}
+ */
+export function getFlooredRandom(min, max) {
+    return Math.floor(Math.random() * (max - min) + min);
 }
