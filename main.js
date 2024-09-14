@@ -53,12 +53,20 @@ directionalLight.shadow.mapSize.height = 8192;
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.05);
 scene.add(directionalLight, ambientLight);
 
-// Meshes
+// Meshes & font
+const fonts = [
+    "FreeMono.ttf",
+    "Cascadia.ttf",
+    "JetBrainsMono-SemiBold.ttf",
+    "JetBrainsMono-ThinItalic.ttf",
+    "JetBrainsMono-BoldItalic.ttf",
+    "JetBrainsMono-Medium.ttf",
+];
 const [earth, sun, moon, customFont] = await Promise.all([
     Utils.loadModel("./assets/Earth.glb", 1 / 500),
     Utils.loadModel("./assets/Sun.glb", 1 / 500),
     Utils.loadModel("./assets/Moon.glb", 1 / 3000),
-    Utils.loadFont("./assets/FreeMono.ttf"),
+    Utils.loadFont(`./assets/JetBrainsMono-Medium.ttf`),
 ]);
 
 //Colors & Materials
@@ -94,7 +102,7 @@ function fontSize() {
     return window.innerWidth / (window.innerHeight + window.innerWidth) / 2;
 }
 const dateMeshOptions = {
-    fontMultiplier: getRandom(.5, .7),
+    fontMultiplier: getRandom(0.5, 0.7),
     depth: getRandom(0.05, 0.1),
 };
 const timeMeshOptions = {
