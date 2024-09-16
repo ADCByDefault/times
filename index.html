@@ -4,8 +4,8 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Time</title>
-        <link rel="stylesheet" href="style.css" />
-        <script src="main.js" type="module" defer></script>
+        <link rel="stylesheet" href="./style.css" />
+        <script src="./main.js" type="module" defer></script>
         <style>
             :root {
                 --LOADERLIBTEXTCOLOR: white;
@@ -136,7 +136,6 @@
                     i++;
                     if (nodes.length == i) i = -1;
                 } catch {
-                    console("error");
                     clearInterval(LOADERLIBTIMER);
                 }
             }, animationTime);

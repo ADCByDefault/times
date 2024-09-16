@@ -26,10 +26,12 @@ renderer.shadowMap.type = THREE.PCFShadowMap;
 // Orbit controls
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.04;
+controls.dampingFactor = getRandom(0.02, 0.07);
 controls.enablePan = false;
-// controls.enableZoom = false;
 controls.enableRotate = true;
+controls.enableZoom = false;
+controls.minDistance = 0;
+controls.maxDistance = 0;
 
 // Canvas on window change
 sizeCanvas();
@@ -61,12 +63,17 @@ const fonts = [
     "JetBrainsMono-ThinItalic.ttf",
     "JetBrainsMono-BoldItalic.ttf",
     "JetBrainsMono-Medium.ttf",
+    "LektonNerdFont-Bold.ttf",
+    "HeavyDataNerdFont-Regular.ttf",
+    "DaddyTimeMonoNerdFontMono-Regular.ttf",
+    "BigBlueTerm437NerdFontMono-Regular.ttf",
+    "3270NerdFontMono-Regular.ttf",
 ];
 const [earth, sun, moon, customFont] = await Promise.all([
     Utils.loadModel("./assets/Earth.glb", 1 / 500),
     Utils.loadModel("./assets/Sun.glb", 1 / 500),
     Utils.loadModel("./assets/Moon.glb", 1 / 3000),
-    Utils.loadFont(`./assets/JetBrainsMono-Medium.ttf`),
+    Utils.loadFont(`./assets/${fonts[getFlooredRandom(0, fonts.length)]}`),
 ]);
 
 //Colors & Materials
@@ -83,39 +90,46 @@ const materials = [
     new THREE.MeshBasicMaterial({
         ...allMaterialsOptions,
         color: color,
-        wireframe: false,
+        wireframe: getFlooredRandom(1, 3) % 2 == 0,
+    }),
+    new THREE.MeshStandardMaterial({
+        ...allMaterialsOptions,
+        color: color,
+        wireframe: getFlooredRandom(1, 3) % 2 == 0,
     }),
     new THREE.MeshNormalMaterial({ ...allMaterialsOptions }),
     new THREE.MeshPhysicalMaterial({
         ...allMaterialsOptions,
         emissive: color,
-        roughness: getRandom(0, 100) / 100,
-        metalness: getRandom(0, 100) / 100,
-        sheen: getRandom(0, 100) / 100,
+        roughness: getRandom(0, 1),
+        metalness: getRandom(0, 1),
+        sheen: getRandom(0, 1),
         sheenColor: colors[getFlooredRandom(0, colors.length)],
     }),
     new THREE.MeshToonMaterial({ ...allMaterialsOptions, color: color }),
 ];
 const material = materials[getFlooredRandom(0, materials.length)];
+
 //TextOptions
 function fontSize() {
-    return window.innerWidth / (window.innerHeight + window.innerWidth) / 2;
+    return (
+        (window.innerWidth / (window.innerHeight + window.innerWidth) / 2) *
+        Math.max(1, window.innerHeight / window.innerWidth)
+    );
 }
 const dateMeshOptions = {
     fontMultiplier: getRandom(0.5, 0.7),
-    depth: getRandom(0.05, 0.1),
+    depth: getRandom(0.05, 0.08),
 };
 const timeMeshOptions = {
     fontMultiplier: getRandom(dateMeshOptions.fontMultiplier, 1.4),
     depth: dateMeshOptions.depth,
 };
 //Texts
-console.log(material, color);
 const box = new THREE.Mesh(
     new THREE.BoxGeometry(0.3, 0.2, 0.07),
     new THREE.MeshStandardMaterial({ color: 0xef77ef, depthTest: false })
 );
-// const depth =
 const dateMesh = new Utils.TextMesh(
     "",
     customFont,
@@ -153,6 +167,7 @@ Utils.getCurrentPosition().then((pos) => {
         ...pos,
     };
 });
+const textLag = getRandom(0.05, 0.3);
 let isUserInteracting = false;
 const cameraShouldBeAt = new THREE.Vector3(5, 0, 0);
 setUp();
@@ -223,7 +238,7 @@ function handleText() {
     );
 
     // animation
-    const t = Utils.lookAt(box, camera.position, 0.1);
+    const t = Utils.lookAt(box, camera.position, textLag);
     t.rotateX(-Math.PI / 2);
     const dir = Utils.getNormalWorldDirection(t);
     textMeshes.forEach((text) => {
