@@ -45,7 +45,7 @@ function sizeCanvas() {
 }
 
 // Global Illumination
-const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
 directionalLight.castShadow = true;
 directionalLight.shadow.bias = -0.003;
 directionalLight.shadow.mapSize.width = 8192;
