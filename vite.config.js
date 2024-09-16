@@ -6,9 +6,6 @@ export default defineConfig({
     },
     base: "/times/",
     resolve: {
-        alias: {
-            three: "./node_modules/three/three.module.js",
-            suncalc: "./node_modules/suncalc.js",
-        },
+        alias: {},
     },
 });

@@ -1,7 +1,7 @@
 import * as Utils from "./utils";
-import * as THREE from "./node_modules/three/build/three.module";
-import { OrbitControls } from "./node_modules/three/examples/jsm/controls/OrbitControls";
-import SunCalc from "./node_modules/suncalc/suncalc";
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import SunCalc from "suncalc";
 
 // Scene camera and renderer
 /** @type {HTMLCanvasElement}*/

@@ -1,8 +1,8 @@
-import * as THREE from "./node_modules/three/build/three.module";
-import { GLTFLoader } from "./node_modules/three/examples/jsm/loaders/GLTFLoader";
-import { Font, TTFLoader } from "./node_modules/three/examples/jsm/Addons.js";
-import { FontLoader } from "./node_modules/three/examples/jsm/Addons.js";
-import { TextGeometry } from "./node_modules/three/examples/jsm/Addons.js";
+import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { Font, TTFLoader } from "three/examples/jsm/Addons.js";
+import { FontLoader } from "three/examples/jsm/Addons.js";
+import { TextGeometry } from "three/examples/jsm/Addons.js";
 
 export const Position = {
     latitude: null,
