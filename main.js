@@ -2,6 +2,7 @@ import * as Utils from "./utils";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import SunCalc from "suncalc";
+import { TextGeometry } from "three/examples/jsm/Addons.js";
 
 // Scene camera and renderer
 /** @type {HTMLCanvasElement}*/
@@ -29,8 +30,6 @@ controls.dampingFactor = getRandom(0.02, 0.07);
 controls.enablePan = false;
 controls.enableRotate = true;
 controls.enableZoom = false;
-controls.minDistance = 0;
-controls.maxDistance = 0;
 
 // Canvas on window change
 sizeCanvas();
@@ -156,6 +155,8 @@ textMeshes.forEach((text) => {
 let userPosition = Utils.Position;
 Utils.getCurrentPositionByAPI().then((ret) => {
     if (ret.error && userPosition.error) return;
+    let p = Utils.geographicToCartesian(ret.latitude, ret.longitude, 4);
+    cameraShouldBeAt.copy(p);
     userPosition = { ...userPosition, ...ret };
 });
 Utils.getCurrentPosition().then((pos) => {

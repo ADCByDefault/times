@@ -25,9 +25,11 @@ export async function getCurrentPosition() {
                     resolve();
                 },
                 (e) => {
-                    reject();
+                    reject(e);
                 }
             );
+        }).catch((e) => {
+            console.error(e);
         });
     }
     const res = await getCurrentPositionByAPI();
