@@ -5,7 +5,4 @@ export default defineConfig({
         target: "es2022",
     },
     base: "/times/",
-    resolve: {
-        alias: {},
-    },
 });
