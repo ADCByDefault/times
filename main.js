@@ -94,6 +94,7 @@ const materials = [
         ...allMaterialsOptions,
         color: color,
         wireframe: getFlooredRandom(1, 3) % 2 == 0,
+        emissive: color,
     }),
     new THREE.MeshNormalMaterial({ ...allMaterialsOptions }),
     new THREE.MeshPhysicalMaterial({
@@ -101,7 +102,7 @@ const materials = [
         emissive: color,
         roughness: getRandom(0, 1),
         metalness: getRandom(0, 1),
-        sheen: getRandom(0, 1),
+        sheen: getRandom(0.5, 1),
         sheenColor: colors[getFlooredRandom(0, colors.length)],
     }),
     new THREE.MeshToonMaterial({ ...allMaterialsOptions, color: color }),
@@ -112,15 +113,15 @@ const material = materials[getFlooredRandom(0, materials.length)];
 function fontSize() {
     return (
         (window.innerWidth / (window.innerHeight + window.innerWidth) / 2) *
-        Math.max(1, window.innerHeight / window.innerWidth)
+        Math.max(0.8, window.innerWidth / window.innerHeight)
     );
 }
 const dateMeshOptions = {
-    fontMultiplier: getRandom(0.5, 0.7),
+    fontMultiplier: getRandom(0.55, 0.7),
     depth: getRandom(0.05, 0.08),
 };
 const timeMeshOptions = {
-    fontMultiplier: getRandom(dateMeshOptions.fontMultiplier, 1.4),
+    fontMultiplier: getRandom(dateMeshOptions.fontMultiplier, 1.35),
     depth: dateMeshOptions.depth,
 };
 //Texts
